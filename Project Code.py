@@ -84,10 +84,27 @@ if choice1==1:
             tf=obj.signin(uname,password)
             if tf==True:
                 print("Login Successful!")
-                curs.execute(""" SELECT cid,cname from pharmacy.customer WHERE email=%s""",(uname,))
+                curs.execute(""" SELECT cid,cname, address, phone, email from pharmacy.customer WHERE email=%s""",(uname,))
                 r=curs.fetchall()
-                
                 print("WELCOME "+r[0][1]+"!")
+                
+                tg=False
+                while tg!=True:
+                    print("1.Press 1 to view profile details.")
+                    print("2.Press 2 to update profile details.")
+                    print("3.Press 3 to order new items.")
+                    print("4.Press 4 to see previous orders.")
+                    print("5.Press 5 to log Out.")
+                    choice3=int(input("Enter choice:"))
+                    if choice3==1:
+                        print("Customer Name:",r[0][1])
+                        print("Customer ID:",r[0][0])
+                        print("Customer address:",r[0][2])
+                        print("Customer Email:",r[0][4])
+                        print("Customer phone:",r[0][3])
+                    if choice3==5:
+                        tg=True
+                    
             else:
                 print("Login Unsuccessful!")
 
