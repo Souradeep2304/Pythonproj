@@ -1,7 +1,8 @@
-import mysql.connector
+import pymysql
+from prettytable import PrettyTable
+import datetime
 
-conn= mysql.connector.connect(user='root', password='1234', database='pharmacy')
-
+conn= pymysql.connect("localhost","root","1234","pharmacy")
 curs=conn.cursor()
 
 class user:   #completed
@@ -32,8 +33,32 @@ class customer(user):
         self.cust_details={}
 
 
-    def placeOrder(self):
-        pass
+    def placeOrder(self,cid):
+        curs.execute("SELECT CONNECTION_ID()")
+        conid=curs.fetchall()
+        curs.execute("SELECT mid,mname,qty,price FROM pharmacy.medicine")
+        rows=curs.fetchall()
+        x = PrettyTable(["MedicineID", "Name", "Quantity", "Price"])
+        for row in rows:
+            x.add_row(row)
+        print(x)
+
+        total_cost=0
+        wm=True
+        while wm!=False:
+            medId=int(input("Enter MedicineID of medicine you want to purchase:"))
+            quan=int(input("Enter Quantity:"))
+            curs.execute("select price from medicine where mid=%s",medId)
+            price=curs.fetchall()
+            total_cost=total_cost+quan*price[0][0]
+            curs.execute("Insert into orders values(%s,%s,%s,%s,%s)",(conid[0][0],cid,medId,'pending',datetime.datetime.now()))
+            conn.commit()
+            wmc=input("Want more medicine(Y/N):")
+            if wmc=='Y' or wmc=='y':
+                wm=True
+            else:
+                wm=False
+        print("Your Total Order Cost is:",total_cost)
 
     def previousOrder(self):
         pass
@@ -60,6 +85,8 @@ class customer(user):
         self.cust_details['Address'] = address
         print(self.cust_details)
         super().signup(self.cust_details)
+
+
 
 
 #Program Menu
@@ -110,10 +137,12 @@ if choice1 == 1:
                     elif choice3 == 2:
                         obj.updateProfile(cid)
                     elif choice3 == 3:
-                        pass
-                    elif choice4 == 4:
+                        obj.placeOrder(cid)
+                    elif choice3 == 4:
                         pass
                     elif choice3 == 5:
                         tg = True
             else:
                 print("Login Unsuccessful!")
+curs.close()
+conn.close()
