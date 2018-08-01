@@ -48,6 +48,11 @@ class customer(user):
         while wm!=False:
             medId=int(input("Enter MedicineID of medicine you want to purchase:"))
             quan=int(input("Enter Quantity:"))
+            curs.execute("SELECT qty from medicine where mid=%s",medId)
+            q=curs.fetchall()
+            qold=q[0][0]
+            qnew=qold-quan
+            curs.execute("UPDATE medicine SET qty=%s WHERE mid=%s",(qnew,medId))
             curs.execute("select price from medicine where mid=%s",medId)
             price=curs.fetchall()
             total_cost=total_cost+quan*price[0][0]
