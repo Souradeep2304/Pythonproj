@@ -56,7 +56,7 @@ class customer(user):
             curs.execute("select price from medicine where mid=%s",medId)
             price=curs.fetchall()
             total_cost=total_cost+quan*price[0][0]
-            curs.execute("Insert into orders values(%s,%s,%s,%s,%s)",(conid[0][0],cid,medId,'pending',datetime.datetime.now()))
+            curs.execute("Insert into orders values(%s,%s,%s,%s,%s)",(conid[0][0],cid,medId,'pending',datetime.datetime.now(),qty))
             conn.commit()
             wmc=input("Want more medicine(Y/N):")
             if wmc=='Y' or wmc=='y':
