@@ -79,9 +79,15 @@ class customer(user):
         print(curs.rowcount,"record updated successfully!")
         conn.commit()
 
-    def getDiscount(self):
-        pass
-
+    def getDiscount(self,totalcost,cid):
+        curs.execute(""" SELECT COUNT(*) from (SELECT cid,oid, count(*) AS count FROM pharmacy.orders GROUP BY oid, cid) as t WHERE cid=%s""",cid)
+        d=curs.fetchall()
+        if(d>=5):
+            return 5
+        else if(d>=10):
+            return 10
+        else:
+            return 0
     def fetchDetails(self,name,password,phone,email,address): # DONE
         self.cust_details['Name'] = name
         self.cust_details['Password'] = password
