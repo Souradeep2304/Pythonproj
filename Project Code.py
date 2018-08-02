@@ -5,8 +5,6 @@ import datetime
 conn= pymysql.connect("localhost","root","1234","pharmacy")
 curs=conn.cursor()
 
-
-
 class user:   #completed
     def __init__(self):
         uid=None
@@ -30,45 +28,38 @@ class user:   #completed
             return False
 
 
-class customer(user):
+class customer(user): #completed
     def __init__(self):
         self.cust_details={}
-
+        self.orderobj = order()
 
     def placeOrder(self,cid,conid):
-        conid
         curs.execute("SELECT mid,mname,qty,price FROM pharmacy.medicine")
         rows=curs.fetchall()
         x = PrettyTable(["MedicineID", "Name", "Quantity", "Price"])
         for row in rows:
             x.add_row(row)
         print(x)
+        total_cost=self.orderobj.addItems(conid)
+        print("-------------------------------------------------")
+        self.orderobj.dispOrderDetails(conid)
+        discount=self.getDiscount()
+        final_amount=total_cost-(discount/100)*total_cost
+        print("Total Cost  :",total_cost)
+        print("Discount    :",discount,"%")
+        print("Final Amount:",final_amount)
+        print("-------------------------------------------------")
 
-        total_cost=0
-        wm=True
-        while wm!=False:
-            medId=int(input("Enter MedicineID of medicine you want to purchase:"))
-            quan=int(input("Enter Quantity:"))
-            
-            curs.execute("SELECT qty from medicine where mid=%s",medId)
-            q=curs.fetchall()
-            qold=q[0][0]
-            qnew=qold-quan
-            curs.execute("UPDATE medicine SET qty=%s WHERE mid=%s",(qnew,medId))
-            curs.execute("select price from medicine where mid=%s",medId)
-            price=curs.fetchall()
-            total_cost=total_cost+quan*price[0][0]
-            curs.execute("Insert into orders values(%s,%s,%s,%s,%s,%s)",(conid,cid,medId,'pending',datetime.datetime.now(),quan))
-            conn.commit()
-            wmc=input("Want more medicine(Y/N):")
-            if wmc=='Y' or wmc=='y':
-                wm=True
-            else:
-                wm=False
-        print("Your Total Order Cost is:",total_cost)
 
-    def previousOrder(self):
-        pass
+
+    def previousOrder(self,cid):
+        curs.execute("SELECT * from pharmacy.orders WHERE cid=%s ORDER BY oid",cid)
+        rows=curs.fetchall()
+        x = PrettyTable(["OrderID","CustomerID","MedicineID","Status","Date","Quantity"])
+        for row in rows:
+            x.add_row(row)
+        print(x)
+
 
     def updateProfile(self, cid):  # DONE    #added uname for condition
         name = input("Enter your Name:")
@@ -81,15 +72,17 @@ class customer(user):
         print(curs.rowcount,"record updated successfully!")
         conn.commit()
 
-    def getDiscount(self,totalcost,cid):
-        curs.execute(""" SELECT COUNT(*) from (SELECT cid,oid, count(*) AS count FROM pharmacy.orders GROUP BY oid, cid) as t WHERE cid=%s""",cid)
-        d=curs.fetchall()
-        if(d>=5):
+    def getDiscount(self):
+        curs.execute(""" SELECT COUNT(*) from (SELECT cid,oid, count(*) AS count FROM pharmacy.orders GROUP BY oid, cid) as t WHERE cid=%s""",
+            cid)
+        d = curs.fetchall()
+        if (d[0][0] >= 5):
             return 5
-        elif(d>=10):
+        elif (d[0][0] >= 10):
             return 10
         else:
             return 0
+
     def fetchDetails(self,name,password,phone,email,address): # DONE
         self.cust_details['Name'] = name
         self.cust_details['Password'] = password
@@ -98,6 +91,54 @@ class customer(user):
         self.cust_details['Address'] = address
         print(self.cust_details)
         super().signup(self.cust_details)
+
+
+class order:
+    def __init__(self):
+        self.status="pending"
+        self.curdate=None
+
+
+    def dispOrderDetails(self,conid):
+        curs.execute("SELECT oid,cid,mid,qty from orders where oid=%s",(conid))
+        rows=curs.fetchall()
+        print("Your Order Details are!!")
+        print("Order-ID   :",rows[0][0])
+        print("Customer-ID:",rows[0][1])
+        print("Medicine-ID  Quantity")
+        for row in rows:
+            print(row[2],"        ",row[3])
+
+
+    def addItems(self,conid):
+        self.setOrderDate()
+        total_cost=0
+        wm = True
+        while wm != False:
+            medId = int(input("Enter MedicineID of medicine you want to purchase:"))
+            quan = int(input("Enter Quantity:"))
+            curs.execute("SELECT qty from medicine where mid=%s", medId)
+            q = curs.fetchall()
+            qold = q[0][0]
+            qnew = qold - quan
+            curs.execute("UPDATE medicine SET qty=%s WHERE mid=%s", (qnew, medId))
+            curs.execute("select price from medicine where mid=%s", medId)
+            price = curs.fetchall()
+            total_cost = total_cost + quan * price[0][0]
+            curs.execute("Insert into orders values(%s,%s,%s,%s,%s,%s)",(conid, cid, medId,self.status,self.curdate,quan))
+            conn.commit()
+            wmc = input("Want more medicine(Y/N):")
+            if wmc == 'Y' or wmc == 'y':
+                wm = True
+            else:
+                wm = False
+        return total_cost
+
+    def setOrderDate(self):
+        self.curdate=datetime.datetime.now()
+
+    def setStatus(self):
+        pass
 
 
 
@@ -133,8 +174,8 @@ if choice1 == 1:
                 cid = r[0][0]
                 print("WELCOME " + r[0][1] + "!")
                 curs.execute("SELECT CONNECTION_ID()")
-                id=curs.fetchall()
-                conid=id[0][0]
+                rows = curs.fetchall()
+                conid = rows[0][0]
                 tg = False
                 while tg != True:
                     print("1.Press 1 to view profile details.")
@@ -155,7 +196,7 @@ if choice1 == 1:
                         obj.placeOrder(cid,conid)
                         conid=conid+1
                     elif choice3 == 4:
-                        pass
+                        obj.previousOrder(cid)
                     elif choice3 == 5:
                         tg = True
             else:
