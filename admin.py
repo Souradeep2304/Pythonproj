@@ -213,5 +213,4 @@ class admin():
         ob = admin()
         ob.updateInventory(item)
 
-ob = admin()
-ob.checkexpirydates()
+
