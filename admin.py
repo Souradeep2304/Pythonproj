@@ -4,12 +4,8 @@ Created on 08-Aug-2018
 @author: Shivansh Thapliyal
 '''
 import pymysql
-import user
-
 import datetime
 from user import *
-from order import *
-from customer import *
 from medicine import Medicine
 import random
 from prettytable import PrettyTable, MSWORD_FRIENDLY
@@ -19,12 +15,14 @@ con=database.connection()
 
 
 
-class admin():
-    admin_pass='root'
+class admin(user):
+    
 
 #     Check inventory for all medicines and their availability.
 #     A query will be generated for the admin to see all the medicines,
 #     their expiry date, the manufacturers info and all the other info.
+    def __init__(self):
+        pass
 
     def checkInventory(self):
         cur=con.cursor()
@@ -47,11 +45,11 @@ class admin():
 
     def printUserDetails(self):
         cur=con.cursor()
-        stmt="""SELECT * FROM pharmacy.customer"""
+        stmt="""SELECT cid,cname,phone,email,address FROM pharmacy.customer"""
         cur.execute(stmt)
         res=cur.fetchall()
         print("Inventory Details :-\n")
-        x = PrettyTable(["Customer ID","Customer Name","Phone","EMail","Address","Password"])
+        x = PrettyTable(["Customer ID","Customer Name","Phone","EMail","Address"])
         x.align["Customer Name"]="l"
         for i in res:
             x.add_row(i)
@@ -91,20 +89,6 @@ class admin():
             x.add_row(i)
         print(x)
 
-
-#     def  pending_orders(self):
-#         cur=con.cursor()
-#         stmt=""""Select oid,cid,dateoforder from orders where status='pending' group by oid"""
-#         cur.execute(stmt)
-#         res=cur.fetchall()
-#         print("Details of pending orders:-")
-#         print("Order id/tCustomer id/tDate Of Order")
-#         for i in res:
-#             print(i[0]+"/t"+i[1]+"/t"+i[2])
-
-
-# Manufacturers Info i.e. orders for new stock.
-# The admin can easily organize from where the stock is coming and who is the manufacturer and the supplier.
 
 
 # Check medicines sold between a certain timeframe.
@@ -170,7 +154,6 @@ class admin():
         print("Here by manufacturer we mean to say distributor ! \n")
 
         k=PrettyTable(["Med_id","Med_name","exp_date","qty_avail"])
-        print(k)
         x = PrettyTable(["ManufacturerID","ManufacturerName"]) #just to test
         x.set_style(MSWORD_FRIENDLY)
         x.align["ManufacturerID"]="r"
